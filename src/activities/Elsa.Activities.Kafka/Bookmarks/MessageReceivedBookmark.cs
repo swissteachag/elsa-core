@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Elsa.Activities.Kafka.Activities.KafkaMessageReceived;
@@ -20,11 +21,24 @@ namespace Elsa.Activities.Kafka.Bookmarks
             if (other is not null)
             {
                 equal = other.Group == this.Group &&
-                           other.Topic == this.Topic &&
-                           (this.IgnoreHeaders || other.Headers == this.Headers) &&
-                           other.AutoOffsetReset == this.AutoOffsetReset &&
-                           other.Schema == this.Schema &&
-                           other.ConnectionString == this.ConnectionString;
+                        other.Topic == this.Topic &&
+                        other.AutoOffsetReset == this.AutoOffsetReset &&
+                        other.Schema == this.Schema &&
+                        other.ConnectionString == this.ConnectionString;
+
+                if (!this.IgnoreHeaders && other.Headers != null && other.Headers.Any())
+                {
+                    // Check if each other header is present in this.Headers
+                    foreach (var header in other.Headers)
+                    {
+                        if (!this.Headers.ContainsKey(header.Key) || this.Headers[header.Key] != header.Value)
+                        {
+                            equal = false;
+                            break;
+                        }
+                    }
+                }
+
             }
             return equal;
         }
